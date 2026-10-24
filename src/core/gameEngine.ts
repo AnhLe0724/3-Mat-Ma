@@ -203,6 +203,52 @@ export function isTargetMatch(word: string, target: string, ctx: SearchContext):
   return false;
 }
 
+// Set of bound syllables & functional particles that cannot be secret treasure words by themselves (N7)
+export const BOUND_SYLLABLES = new Set([
+  'cà', 'kho', 'mặt', 'hoa', 'tàu', 'vương', 'đồng', 'bác', 'ngân', 'bánh', 'sư', 'ngọn', 'bình', 'người',
+  'bản', 'cơ', 'thể', 'tính', 'học', 'những', 'các', 'thì', 'mà', 'là', 'bị', 'được', 'do', 'với', 'cho',
+  'về', 'trong', 'ngoài', 'tại', 'ở', 'từ', 'lại', 'qua', 'ra', 'vào', 'lên', 'xuống', 'rất', 'quá', 'lắm',
+  'ấy', 'này', 'kia', 'nọ', 'đâu', 'đó', 'sao', 'ai', 'gì', 'nào'
+]);
+
+/**
+ * Robust graph association resolution:
+ * Resolves direct and reverse edges, plus sub-phrase token relations for compound clues (N3)
+ */
+export function getClueGraphScore(
+  hyp: string,
+  candidate: string,
+  graph?: Record<string, Record<string, number>>
+): number {
+  if (!graph) return 0;
+  let direct = graph[hyp]?.[candidate] || 0;
+  let reverse = graph[candidate]?.[hyp] || 0;
+
+  // Clue sub-token (e.g. 'thức uống' -> 'uống', 'khám bệnh' -> 'khám')
+  const hypTokens = hyp.split(/\s+/);
+  if (hypTokens.length > 1) {
+    for (const token of hypTokens) {
+      if (token.length > 1) {
+        const d = graph[token]?.[candidate] || 0;
+        const r = graph[candidate]?.[token] || 0;
+        if (d * 0.85 > direct) direct = d * 0.85;
+        if (r * 0.85 > reverse) reverse = r * 0.85;
+      }
+    }
+  }
+
+  // Reverse compound neighbor on candidate (e.g. 'đồng hồ' has 'kim giây' -> matches 'kim')
+  if (reverse === 0 && graph[candidate]) {
+    for (const [neighbor, weight] of Object.entries(graph[candidate])) {
+      if (neighbor.startsWith(hyp + ' ') || neighbor.endsWith(' ' + hyp)) {
+        reverse = Math.max(reverse, weight * 0.9);
+      }
+    }
+  }
+
+  return Math.max(direct, reverse);
+}
+
 /**
  * Courier deduction:
  * The courier knows ONLY the public first letter + their single clue letter.
@@ -220,6 +266,8 @@ export function deduceCourier(
   // Restore hypotheses for unaccented keyboard input
   const hypotheses = restoreUnaccentedHypotheses(clue, unaccentedMap, word2idx, graph);
   const clueVecs = hypotheses.map((h) => ({ h, vec: getVectorForWord(h, ctx) }));
+  const clueTokens = new Set(clue.toLowerCase().trim().split(/\s+/));
+  const maxLogFreq = Math.log1p(2223);
 
   const candidates: { word: string; score: number }[] = [];
 
@@ -230,6 +278,18 @@ export function deduceCourier(
     if (!matchFirstLetter(w, firstLetter)) {
       continue;
     }
+
+    // Filter out bound morphemes / function particles (N7)
+    if (BOUND_SYLLABLES.has(w)) continue;
+
+    // Reject long idioms / 4+ syllables
+    const syllables = w.split(' ').length;
+    if (syllables > 3) continue;
+
+    // Whitelist T1/T2: reject T3 obscure low-frequency words unless in graph (N2)
+    const freq = vocab[i].freq || 1;
+    const hasGraph = graph?.[w] && Object.keys(graph[w]).length > 0;
+    if (freq < 45 && !hasGraph) continue;
 
     const off = i * dim;
     const hub = hubScores ? hubScores[i] : 0.0;
@@ -242,11 +302,10 @@ export function deduceCourier(
       for (let j = 0; j < dim; j++) {
         dot += hyp.vec[j] * vectors[off + j];
       }
-      dot -= 0.3 * hub;
+      // N1: Capped hubness penalty to avoid favoring rare isolated words
+      dot -= 0.12 * hub;
 
-      const direct = graph?.[hyp.h]?.[w] || 0;
-      const reverse = graph?.[w]?.[hyp.h] || 0;
-      const gRaw = Math.max(direct, reverse);
+      const gRaw = getClueGraphScore(hyp.h, w, graph);
       const gNorm = gRaw * degNorm * 1.4;
 
       const aff = dot + 1.2 * gNorm;
@@ -255,10 +314,23 @@ export function deduceCourier(
       }
     }
 
+    // Familiarity feature (N2): log frequency normalized bonus
+    const fam = Math.log1p(freq) / maxLogFreq;
+    const famBonus = 0.08 * fam;
+
+    // Echo penalty: avoid echo collocations (e.g. clue 'vàng' -> 'khố vàng')
+    let echoPenalty = 0.0;
+    const wTokens = w.split(/\s+/);
+    for (const t of wTokens) {
+      if (clueTokens.has(t) && w !== clue) {
+        echoPenalty = 0.25;
+        break;
+      }
+    }
+
     // Syllable length prior
-    const syllables = w.split(' ').length;
-    const lenBonus = syllables <= 2 ? 0.12 : (syllables === 3 ? 0.03 : -0.20);
-    const score = Math.max(bestAffinity, 0.0) + lenBonus;
+    const lenBonus = syllables === 2 ? 0.15 : (syllables === 1 ? 0.08 : 0.02);
+    const score = Math.max(bestAffinity, 0.0) + famBonus + lenBonus - echoPenalty;
 
     candidates.push({ word: w, score });
   }
@@ -285,12 +357,20 @@ export function deduceCourier(
   // Courier leaks if their single guess (#1 rank) is the secret word
   const leaked = targetRank === 1;
 
+  // Confidence assessment (N5)
+  const top1Raw = topRawScores[0] ?? 0;
+  const top2Raw = candidates[1]?.score ?? 0;
+  const margin = top1Raw - top2Raw;
+  const confidence: 'Cao' | 'Trung bình' | 'Thấp' =
+    top1Raw >= 0.70 && margin >= 0.08 ? 'Cao' : top1Raw >= 0.40 ? 'Trung bình' : 'Thấp';
+
   return {
     courierIndex: 1, // Will be overridden by caller
     clue,
     inferredWords,
     leaked,
     targetRank,
+    confidence,
   };
 }
 
@@ -315,6 +395,7 @@ export function deduceFriend(
 
   const allHypothesesSet = new Set<string>();
   clueHypotheses.forEach((list) => list.forEach((h) => allHypothesesSet.add(h)));
+  const maxLogFreq = Math.log1p(2223);
 
   const candidates: { word: string; score: number }[] = [];
 
@@ -325,6 +406,18 @@ export function deduceFriend(
     if (!matchFirstLetter(w, firstLetter)) {
       continue;
     }
+
+    // Filter out bound morphemes / function particles (N7)
+    if (BOUND_SYLLABLES.has(w)) continue;
+
+    // Reject long idioms / 4+ syllables
+    const syllables = w.split(' ').length;
+    if (syllables > 3) continue;
+
+    // Whitelist T1/T2: reject T3 obscure low-frequency words unless in graph (N2)
+    const freq = vocab[i].freq || 1;
+    const hasGraph = graph?.[w] && Object.keys(graph[w]).length > 0;
+    if (freq < 45 && !hasGraph) continue;
 
     const off = i * dim;
     const hub = hubScores ? hubScores[i] : 0.0;
@@ -343,11 +436,10 @@ export function deduceFriend(
         for (let j = 0; j < dim; j++) {
           dot += hyp.vec[j] * vectors[off + j];
         }
-        dot -= 0.3 * hub;
+        // N1: Capped hubness penalty
+        dot -= 0.12 * hub;
 
-        const direct = graph?.[hyp.h]?.[w] || 0;
-        const reverse = graph?.[w]?.[hyp.h] || 0;
-        const gRaw = Math.max(direct, reverse);
+        const gRaw = getClueGraphScore(hyp.h, w, graph);
         const gNorm = gRaw * degNorm * 1.4;
 
         const aff = dot + 1.2 * gNorm;
@@ -369,10 +461,12 @@ export function deduceFriend(
     const gTriple = g[0] * g[1] * g[2];
     const synergy = 1.2 * gPair + 3.0 * gTriple;
 
-    const syllables = w.split(' ').length;
-    const lenBonus = syllables <= 2 ? 0.12 : (syllables === 3 ? 0.03 : -0.20);
+    // Familiarity feature (N2): log frequency normalized bonus
+    const fam = Math.log1p(freq) / maxLogFreq;
+    const famBonus = 0.08 * fam;
 
-    const score = avgS + 1.2 * sMin + synergy + lenBonus;
+    const lenBonus = syllables === 2 ? 0.15 : (syllables === 1 ? 0.08 : 0.02);
+    const score = avgS + 1.2 * sMin + synergy + famBonus + lenBonus;
 
     candidates.push({ word: w, score });
   }
@@ -398,11 +492,19 @@ export function deduceFriend(
   // Friend succeeds only if their single guess (#1 rank) is the secret word
   const success = targetRank === 1;
 
+  // Confidence assessment (N5)
+  const top1Raw = topRawScores[0] ?? 0;
+  const top2Raw = candidates[1]?.score ?? 0;
+  const margin = top1Raw - top2Raw;
+  const confidence: 'Cao' | 'Trung bình' | 'Thấp' =
+    top1Raw >= 0.70 && margin >= 0.08 ? 'Cao' : top1Raw >= 0.40 ? 'Trung bình' : 'Thấp';
+
   return {
     clues,
     inferredWords,
     success,
     targetRank,
+    confidence,
   };
 }
 

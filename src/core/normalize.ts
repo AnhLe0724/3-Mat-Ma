@@ -62,6 +62,11 @@ export function restoreUnaccentedHypotheses(
   if (!norm) return [];
   if (!unaccentedMap) return [norm];
 
+  // Prioritize exact compound phrase from unaccentedMap (e.g. 'quan su' -> 'quân sự')
+  if (unaccentedMap[norm] && unaccentedMap[norm].length > 0) {
+    return [norm, ...unaccentedMap[norm].filter((c) => c !== norm)];
+  }
+
   const syllables = norm.split(/\s+/);
   if (syllables.length === 1) {
     const cands = unaccentedMap[syllables[0]];
@@ -73,11 +78,11 @@ export function restoreUnaccentedHypotheses(
   for (const cList of sylCands) {
     const next: string[] = [];
     for (const prefix of combos) {
-      for (const cand of cList.slice(0, 5)) {
+      for (const cand of cList.slice(0, 8)) {
         next.push(prefix ? prefix + ' ' + cand : cand);
       }
     }
-    combos = next.slice(0, 30);
+    combos = next.slice(0, 40);
   }
 
   const sorted = combos.sort((a, b) => {

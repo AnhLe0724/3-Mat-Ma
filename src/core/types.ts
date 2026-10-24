@@ -53,6 +53,7 @@ export interface CourierDeduction {
   inferredWords: SearchResult[];
   leaked: boolean; // True if secret word was guessed by this courier
   targetRank?: number; // Rank if found in candidates
+  confidence?: 'Cao' | 'Trung bình' | 'Thấp';
 }
 
 export interface FriendDeduction {
@@ -60,6 +61,7 @@ export interface FriendDeduction {
   inferredWords: SearchResult[];
   success: boolean; // True if secret word was successfully inferred
   targetRank?: number;
+  confidence?: 'Cao' | 'Trung bình' | 'Thấp';
 }
 
 export interface GameEvaluationResult {
