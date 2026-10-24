@@ -2840,6 +2840,29 @@ body {
   flex-wrap: wrap;
 }
 
+.start-aux-actions .start-aux-btn {
+  background: #f1f5f9;
+  border: 1.5px solid #cbd5e1;
+  color: #000000 !important;
+  font-weight: 800;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.start-aux-actions .start-aux-btn span {
+  color: #000000 !important;
+  font-weight: 800;
+}
+
+.start-aux-actions .start-aux-btn svg {
+  color: #000000 !important;
+}
+
+.start-aux-actions .start-aux-btn:hover {
+  background: #e2e8f0;
+  border-color: #94a3b8;
+  color: #000000 !important;
+}
+
 /* ==========================================================================
    STORY & RULES BRIEFING SCREEN
    ========================================================================== */

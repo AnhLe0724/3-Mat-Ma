@@ -191,20 +191,20 @@ export const GameTab: React.FC = () => {
             <div className="start-aux-actions">
               <button
                 type="button"
-                className="game-pill-btn"
+                className="game-pill-btn start-aux-btn"
                 onClick={startRandomWordCutscene}
               >
-                <Zap size={14} />
-                <span>Vào Nhiệm Vụ Ngẫu Nhiên Ngay</span>
+                <Zap size={14} color="#000000" />
+                <span style={{ color: '#000000' }}>Vào Nhiệm Vụ Ngẫu Nhiên Ngay</span>
               </button>
 
               <button
                 type="button"
-                className="game-pill-btn"
+                className="game-pill-btn start-aux-btn"
                 onClick={() => setGamePhase('story')}
               >
-                <BookOpen size={14} />
-                <span>Cốt Truyện & Luật Chơi</span>
+                <BookOpen size={14} color="#000000" />
+                <span style={{ color: '#000000' }}>Cốt Truyện & Luật Chơi</span>
               </button>
             </div>
           </div>
