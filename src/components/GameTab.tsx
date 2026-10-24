@@ -1,24 +1,31 @@
 import React, { useState } from 'react';
 import { useAppStore } from '../store/useAppStore';
-import { PRESET_MISSIONS } from '../core/gameEngine';
+import { PRESET_MISSIONS, type GameMission } from '../core/gameEngine';
 import {
   AlertTriangle,
+  ArrowRight,
   Award,
+  BookOpen,
   ChevronDown,
   ChevronUp,
   Dice5,
   Eye,
   EyeOff,
   HelpCircle,
+  Home,
   Lock,
   Mail,
+  Play,
   Plus,
   RefreshCw,
+  Scroll,
   Send,
   ShieldAlert,
   ShieldCheck,
+  Shuffle,
   Sparkles,
   Star,
+  Zap,
 } from 'lucide-react';
 
 export const GameTab: React.FC = () => {
@@ -35,19 +42,69 @@ export const GameTab: React.FC = () => {
     selectMission,
     setCustomMission,
     submitCourierClue,
-    resetGameClues,
     loadStatus,
   } = useAppStore();
+
+  const [gamePhase, setGamePhase] = useState<'start' | 'story' | 'cutscene' | 'playing'>('start');
+  const [reelWord, setReelWord] = useState<string>('???');
+  const [isReelLocked, setIsReelLocked] = useState<boolean>(false);
+  const [lockedMission, setLockedMission] = useState<GameMission | null>(null);
 
   const [showSecret, setShowSecret] = useState(true);
   const [showRules, setShowRules] = useState(false);
   const [customWordInput, setCustomWordInput] = useState('');
   const [showCustomModal, setShowCustomModal] = useState(false);
 
-  const handleRandomMission = () => {
+  const reelWordsPool = [
+    'kim cương', 'tàu ngầm', 'hoa hồng', 'mặt trời', 'bác sĩ',
+    'ngân hàng', 'sư tử', 'vương miện', 'bánh mì', 'ngọn hải đăng',
+    'bình minh', 'đồng hồ', 'kho báu', 'cà phê', 'núi lửa',
+    'phi thuyền', 'hải âu', 'thám tử', 'rừng rậm', 'kính thiên văn'
+  ];
+
+  const startRandomWordCutscene = () => {
     const available = PRESET_MISSIONS.filter((m) => m.id !== gameMission.id);
-    const random = available[Math.floor(Math.random() * available.length)];
-    selectMission(random);
+    const target = available.length > 0
+      ? available[Math.floor(Math.random() * available.length)]
+      : PRESET_MISSIONS[Math.floor(Math.random() * PRESET_MISSIONS.length)];
+
+    setGamePhase('cutscene');
+    setIsReelLocked(false);
+    setLockedMission(null);
+
+    let counter = 0;
+    const fastInterval = setInterval(() => {
+      counter++;
+      const randomDisplayWord = reelWordsPool[Math.floor(Math.random() * reelWordsPool.length)];
+      setReelWord(randomDisplayWord);
+
+      if (counter >= 16) {
+        clearInterval(fastInterval);
+
+        setTimeout(() => {
+          setReelWord(reelWordsPool[Math.floor(Math.random() * reelWordsPool.length)]);
+        }, 120);
+
+        setTimeout(() => {
+          setReelWord(reelWordsPool[Math.floor(Math.random() * reelWordsPool.length)]);
+        }, 260);
+
+        setTimeout(() => {
+          setReelWord(target.secretWord);
+          setIsReelLocked(true);
+          setLockedMission(target);
+          selectMission(target);
+
+          setTimeout(() => {
+            setGamePhase('playing');
+          }, 1500);
+        }, 460);
+      }
+    }, 65);
+  };
+
+  const handleRandomMission = () => {
+    startRandomWordCutscene();
   };
 
   const handleCreateCustom = (e: React.FormEvent) => {
@@ -56,6 +113,7 @@ export const GameTab: React.FC = () => {
     setCustomMission(customWordInput.trim());
     setCustomWordInput('');
     setShowCustomModal(false);
+    setGamePhase('playing');
   };
 
   const isEvaluating = gameStatus === 'evaluating';
@@ -80,38 +138,262 @@ export const GameTab: React.FC = () => {
         </p>
       </div>
 
-      {/* Quick Action Badges (Button variants in reference image) */}
-      <div className="game-action-pill-row">
-        <button
-          type="button"
-          className="game-pill-btn"
-          onClick={handleRandomMission}
-          title="Đổi màn ngẫu nhiên"
-        >
-          <Dice5 size={14} />
-          <span>Đổi Nhiệm Vụ</span>
-        </button>
+      {/* 1. START SCREEN */}
+      {gamePhase === 'start' && (
+        <div className="game-start-view">
+          <div className="start-hero-card">
+            <div className="start-badge-pill">
+              <Sparkles size={14} />
+              <span>Thử Thách Trí Tuệ Liên Tưởng</span>
+            </div>
 
-        <button
-          type="button"
-          className="game-pill-btn"
-          onClick={() => setShowCustomModal(!showCustomModal)}
-          title="Tự nhập từ khóa bí mật"
-        >
-          <Plus size={14} />
-          <span>Tự Tạo Từ Khóa</span>
-        </button>
+            <h3 className="start-main-headline">
+              Giao 3 Bức Thư Qua 3 Tuyến Đường<br />
+              <span>Đánh Lừa Gián Điệp — Mở Khóa Kho Báu!</span>
+            </h3>
 
-        <button
-          type="button"
-          className="game-pill-btn"
-          onClick={() => setShowRules(!showRules)}
-        >
-          <HelpCircle size={14} />
-          <span>{showRules ? 'Đóng Luật Chơi' : 'Xem Luật Chơi'}</span>
-          {showRules ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-        </button>
-      </div>
+            <p className="start-tagline">
+              Mỗi người giao thư chỉ biết đúng chữ cái đầu tiên của mật mã bí mật. Hãy soạn 3 bức thư thật tinh tế để kẻ địch đoán sai nhưng bạn tri kỷ gom lại đoán đúng!
+            </p>
+
+            {/* 3 Roles Spotlight Cards */}
+            <div className="start-roles-grid">
+              <div className="start-role-col">
+                <div className="role-icon-box courier-bg">🕵️</div>
+                <span className="role-title">3 Gián Điệp Giao Thư</span>
+                <span className="role-desc">Mỗi người chỉ nhận 1 thư. Họ đoán trúng két là bạn thua!</span>
+              </div>
+
+              <div className="start-role-col">
+                <div className="role-icon-box vault-bg">💎</div>
+                <span className="role-title">Mật Mã Kho Báu</span>
+                <span className="role-desc">Từ khóa bí mật ngẫu nhiên trong két sắt an toàn.</span>
+              </div>
+
+              <div className="start-role-col">
+                <div className="role-icon-box friend-bg">🤝</div>
+                <span className="role-title">Người Bạn Tri Kỷ</span>
+                <span className="role-desc">Nhận đủ cả 3 thư để liên kết và giải mã chiến thắng!</span>
+              </div>
+            </div>
+
+            {/* Giant 3D Pulsating Start Button */}
+            <button
+              type="button"
+              className="btn-start-hero"
+              onClick={() => setGamePhase('story')}
+            >
+              <Play size={24} fill="currentColor" />
+              <span>BẮT ĐẦU CHƠI</span>
+            </button>
+
+            {/* Quick Action Badges on Start Screen */}
+            <div className="start-aux-actions">
+              <button
+                type="button"
+                className="game-pill-btn"
+                onClick={startRandomWordCutscene}
+              >
+                <Zap size={14} />
+                <span>Vào Nhiệm Vụ Ngẫu Nhiên Ngay</span>
+              </button>
+
+              <button
+                type="button"
+                className="game-pill-btn"
+                onClick={() => setGamePhase('story')}
+              >
+                <BookOpen size={14} />
+                <span>Cốt Truyện & Luật Chơi</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 2. STORY & RULES BRIEFING SCREEN */}
+      {gamePhase === 'story' && (
+        <div className="game-story-view">
+          <div className="story-card-container">
+            <div className="story-header-area">
+              <div className="story-title-group">
+                <BookOpen size={24} color="#7c3aed" />
+                <h3>Cốt Truyện & Luật Chơi</h3>
+              </div>
+              <span className="start-badge-pill">Tập Trận Mật Vụ</span>
+            </div>
+
+            {/* Story Lore Box */}
+            <div className="story-lore-box">
+              <div className="story-lore-header">
+                <Scroll size={16} />
+                <span>HỒ SƠ BỐI CẢNH TỐI MẬT</span>
+              </div>
+              <div className="story-lore-content">
+                Bạn đang nắm giữ một <strong>mật mã kho báu bí mật</strong>. Nhiệm vụ của bạn là gửi mật mã này tới <strong>Người Bạn Tri Kỷ</strong> ở căn cứ đối diện.
+                <br /><br />
+                ⚠️ <strong>Cạm bẫy gián điệp:</strong> 3 người giao thư thực chất là <strong>3 gián điệp ngầm</strong>! Họ chỉ biết đúng <strong>chữ cái đầu tiên</strong> của mật mã. Nếu bất kỳ ai trong số họ đoán trúng mật mã ngay khi nhận thư của bạn, thông tin bị đánh cắp và bạn <strong>THUA CUỘC</strong>!
+                <br /><br />
+                🎯 <strong>Kỳ tích tình bạn:</strong> Người Bạn Tri Kỷ ở đích đến sẽ nhận được đầy đủ cả 3 bức thư. Dù cũng chỉ biết chữ cái đầu, sự liên kết của cả 3 manh mối sẽ giúp bạn mình giải mã thành công!
+              </div>
+            </div>
+
+            {/* 3 Step Rules List */}
+            <div className="story-rules-list">
+              <div className="story-rule-item">
+                <div className="rule-number-badge">1</div>
+                <div className="rule-content">
+                  <strong>Soạn Thư Từng Chặng:</strong> Điền 1 từ manh mối (bắt đầu bằng chữ cái quy định) rồi bấm nộp cho từng người giao thư.
+                </div>
+              </div>
+
+              <div className="story-rule-item">
+                <div className="rule-number-badge">2</div>
+                <div className="rule-content">
+                  <strong>Đánh Lừa Gián Điệp:</strong> Mỗi người giao thư chỉ được đoán 1 lần duy nhất. Nếu họ đoán SAI mật mã, chặng giao thư đó AN TOÀN!
+                </div>
+              </div>
+
+              <div className="story-rule-item">
+                <div className="rule-number-badge">3</div>
+                <div className="rule-content">
+                  <strong>Mở Khóa Kho Báu:</strong> Khi cả 3 người giao thư đều không đoán được, Người Bạn nhận đủ 3 thư phải ĐOÁN ĐÚNG mật mã để GIÀNH CHIẾN THẮNG!
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="story-actions-row">
+              <button
+                type="button"
+                className="game-btn-ghost-sm"
+                onClick={() => setGamePhase('start')}
+              >
+                Quay Lại
+              </button>
+
+              <button
+                type="button"
+                className="btn-proceed-mission"
+                onClick={startRandomWordCutscene}
+              >
+                <Sparkles size={18} />
+                <span>TIẾP TỤC — VÀO NHIỆM VỤ</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 3. RANDOM WORD CUTSCENE (SLOT MACHINE REEL) */}
+      {gamePhase === 'cutscene' && (
+        <div className="game-cutscene-overlay">
+          <div className="cutscene-modal-card">
+            <div className="cutscene-top-tag">
+              <Shuffle size={14} />
+              <span>Hệ Thống Đang Thiết Lập</span>
+            </div>
+
+            <h3 className="cutscene-title">
+              {isReelLocked ? 'ĐÃ KHÓA MẬT MÃ KHO BÁU!' : 'ĐANG QUAY TỪ KHÓA BÍ MẬT...'}
+            </h3>
+
+            <p className="cutscene-sub">
+              {isReelLocked
+                ? 'Hồ sơ nhiệm vụ đã sẵn sàng. Hãy chuẩn bị 3 bức thư đánh lừa!'
+                : 'Đang ngẫu nhiên chọn từ ngữ tiếng Việt kịch tính...'}
+            </p>
+
+            {/* Slot Reel Machine Frame */}
+            <div className="cutscene-reel-frame">
+              <span className="reel-indicator-left">▶</span>
+              <div className="reel-slot-center">
+                <span
+                  className={`reel-spinning-word ${
+                    isReelLocked ? 'locked-effect' : 'blur-effect'
+                  }`}
+                >
+                  {reelWord}
+                </span>
+              </div>
+              <span className="reel-indicator-right">◀</span>
+            </div>
+
+            {/* Dossier Card when locked */}
+            {isReelLocked && lockedMission && (
+              <div className="cutscene-revealed-dossier animate-pop-in">
+                <div className="dossier-pill-row">
+                  <span className="dossier-pill letter-pill">
+                    Chữ cái đầu: "{lockedMission.firstLetter}"
+                  </span>
+                  <span className="dossier-pill cat-pill">
+                    Chủ đề: {lockedMission.category}
+                  </span>
+                </div>
+                <p className="dossier-hint-text">
+                  "{lockedMission.hint}"
+                </p>
+              </div>
+            )}
+
+            {/* Fast Enter Game Action */}
+            <button
+              type="button"
+              className="btn-enter-game-fast"
+              onClick={() => setGamePhase('playing')}
+            >
+              <span>{isReelLocked ? 'VÀO CHƠI NGAY' : 'BỎ QUA & VÀO CHƠI'}</span>
+              <ArrowRight size={18} />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 4. MAIN GAMEPLAY VIEW */}
+      {gamePhase === 'playing' && (
+        <>
+          {/* Quick Action Badges */}
+          <div className="game-action-pill-row">
+            <button
+              type="button"
+              className="game-pill-btn"
+              onClick={() => setGamePhase('start')}
+              title="Về màn hình chính"
+            >
+              <Home size={14} />
+              <span>Trang Chủ</span>
+            </button>
+
+            <button
+              type="button"
+              className="game-pill-btn"
+              onClick={handleRandomMission}
+              title="Đổi màn ngẫu nhiên"
+            >
+              <Dice5 size={14} />
+              <span>Đổi Nhiệm Vụ</span>
+            </button>
+
+            <button
+              type="button"
+              className="game-pill-btn"
+              onClick={() => setShowCustomModal(!showCustomModal)}
+              title="Tự nhập từ khóa bí mật"
+            >
+              <Plus size={14} />
+              <span>Tự Tạo Từ Khóa</span>
+            </button>
+
+            <button
+              type="button"
+              className="game-pill-btn"
+              onClick={() => setShowRules(!showRules)}
+            >
+              <HelpCircle size={14} />
+              <span>{showRules ? 'Đóng Luật Chơi' : 'Xem Luật Chơi'}</span>
+              {showRules ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+            </button>
+          </div>
 
       {/* Custom Word Modal Popup */}
       {showCustomModal && (
@@ -512,18 +794,7 @@ export const GameTab: React.FC = () => {
           </div>
         )}
 
-        {/* Quick Reset Action */}
-        <div className="game-play-action-area">
-          <button
-            type="button"
-            className="btn-juicy-reset full-width"
-            onClick={resetGameClues}
-            title="Làm mới lại từ đầu"
-          >
-            <RefreshCw size={16} />
-            <span>Làm Lại Toàn Bộ 3 Thư</span>
-          </button>
-        </div>
+
       </div>
 
       {/* Evaluation Results Stage (Matches top-right popup card in reference image) */}
@@ -647,6 +918,8 @@ export const GameTab: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+        </>
       )}
     </div>
   );

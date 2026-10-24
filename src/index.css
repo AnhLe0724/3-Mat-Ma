@@ -1074,9 +1074,9 @@ body {
   border-radius: 9999px;
   color: #ffffff;
   padding: 7px 16px;
-  font-family: 'Outfit', sans-serif;
-  font-size: 12px;
-  font-weight: 700;
+  font-family: var(--font-game);
+  font-size: 13px;
+  font-weight: 800;
   cursor: pointer;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.3);
   transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -1269,9 +1269,9 @@ body {
 }
 
 .secret-word-revealed {
-  font-family: 'Outfit', sans-serif;
-  font-size: 18px;
-  font-weight: 800;
+  font-family: var(--font-game);
+  font-size: 20px;
+  font-weight: 900;
   color: #059669;
   letter-spacing: 0.5px;
 }
@@ -2637,5 +2637,597 @@ body {
   }
   .hud-resources-right {
     display: none; /* Hide coins/gems on very narrow screen to keep HUD clean */
+  }
+}
+
+/* ==========================================================================
+   GAME START SCREEN, STORY INTRO & RANDOM WORD CUTSCENE
+   ========================================================================== */
+
+/* Start Screen View */
+.game-start-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  width: 100%;
+  max-width: 680px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 5;
+  animation: fadeIn 0.4s ease-out;
+}
+
+.start-hero-card {
+  width: 100%;
+  background: #ffffff;
+  border-radius: 28px;
+  padding: 32px 24px;
+  box-shadow: 0 10px 0 #bca7f0, 0 20px 40px rgba(35, 10, 80, 0.25);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.start-hero-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 8px;
+  background: linear-gradient(90deg, #f59e0b, #ec4899, #8b5cf6, #10b981);
+}
+
+.start-badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #f5f3ff;
+  border: 1.5px solid #ddd6fe;
+  color: #7c3aed;
+  padding: 6px 16px;
+  border-radius: 9999px;
+  font-family: var(--font-game);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.start-main-headline {
+  margin: 0;
+  font-family: var(--font-game);
+  font-size: 26px;
+  font-weight: 900;
+  color: #1e293b;
+  line-height: 1.3;
+}
+
+.start-main-headline span {
+  color: #7c3aed;
+}
+
+.start-tagline {
+  margin: 0;
+  font-size: 15px;
+  color: #64748b;
+  line-height: 1.5;
+  max-width: 520px;
+}
+
+/* 3 Core Roles Highlight Grid */
+.start-roles-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  width: 100%;
+  margin-top: 4px;
+}
+
+.start-role-col {
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 18px;
+  padding: 14px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.start-role-col:hover {
+  transform: translateY(-2px);
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.role-icon-box {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+}
+
+.role-icon-box.courier-bg {
+  background: #fef3c7;
+  border: 1.5px solid #fde68a;
+}
+
+.role-icon-box.vault-bg {
+  background: #dbeafe;
+  border: 1.5px solid #bfdbfe;
+}
+
+.role-icon-box.friend-bg {
+  background: #ede9fe;
+  border: 1.5px solid #ddd6fe;
+}
+
+.role-title {
+  font-family: var(--font-game);
+  font-size: 13px;
+  font-weight: 800;
+  color: #1e293b;
+}
+
+.role-desc {
+  font-size: 11px;
+  color: #64748b;
+  line-height: 1.35;
+  text-align: center;
+}
+
+/* Giant Start Game Button */
+.btn-start-hero {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 380px;
+  padding: 18px 36px;
+  border: none;
+  border-radius: 9999px;
+  background: linear-gradient(180deg, #4ade80 0%, #16a34a 100%);
+  color: #ffffff;
+  font-family: var(--font-game);
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  box-shadow: 0 8px 0 #15803d, 0 16px 32px rgba(22, 163, 74, 0.45);
+  transition: all 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+  margin-top: 8px;
+  animation: heroPulse 2s infinite ease-in-out;
+}
+
+.btn-start-hero:hover {
+  filter: brightness(1.08);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 0 #15803d, 0 20px 36px rgba(22, 163, 74, 0.55);
+}
+
+.btn-start-hero:active {
+  transform: translateY(6px);
+  box-shadow: 0 2px 0 #15803d, 0 6px 14px rgba(22, 163, 74, 0.3);
+}
+
+@keyframes heroPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+    box-shadow: 0 8px 0 #15803d, 0 18px 40px rgba(74, 222, 128, 0.65);
+  }
+}
+
+/* Secondary Actions on Start Screen */
+.start-aux-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* ==========================================================================
+   STORY & RULES BRIEFING SCREEN
+   ========================================================================== */
+.game-story-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  width: 100%;
+  max-width: 680px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 5;
+  animation: fadeIn 0.35s ease-out;
+}
+
+.story-card-container {
+  width: 100%;
+  background: #ffffff;
+  border-radius: 28px;
+  padding: 28px 24px;
+  box-shadow: 0 10px 0 #bca7f0, 0 20px 40px rgba(35, 10, 80, 0.25);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.story-header-area {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 2px dashed #e2e8f0;
+  padding-bottom: 14px;
+}
+
+.story-title-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.story-title-group h3 {
+  margin: 0;
+  font-family: var(--font-game);
+  font-size: 20px;
+  font-weight: 900;
+  color: #1e293b;
+}
+
+/* Lore Block */
+.story-lore-box {
+  background: linear-gradient(135deg, #fefce8 0%, #fffbeb 100%);
+  border: 1.5px solid #fde68a;
+  border-radius: 18px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.story-lore-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-game);
+  font-size: 14px;
+  font-weight: 800;
+  color: #b45309;
+}
+
+.story-lore-content {
+  font-size: 13px;
+  color: #78350f;
+  line-height: 1.55;
+}
+
+.story-lore-content strong {
+  color: #92400e;
+}
+
+/* Quick Rules Steps */
+.story-rules-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.story-rule-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 12px 14px;
+}
+
+.rule-number-badge {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  background: #7c3aed;
+  color: #ffffff;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-game);
+  font-size: 13px;
+  font-weight: 900;
+  box-shadow: 0 3px 0 #5b21b6;
+}
+
+.rule-content {
+  font-size: 13px;
+  color: #334155;
+  line-height: 1.45;
+}
+
+.rule-content strong {
+  color: #0f172a;
+}
+
+.story-actions-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 6px;
+}
+
+.btn-proceed-mission {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px 28px;
+  border: none;
+  border-radius: 9999px;
+  background: linear-gradient(180deg, #4ade80 0%, #16a34a 100%);
+  color: #ffffff;
+  font-family: var(--font-game);
+  font-size: 17px;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 6px 0 #15803d, 0 12px 24px rgba(22, 163, 74, 0.4);
+  transition: all 0.15s ease;
+}
+
+.btn-proceed-mission:hover {
+  filter: brightness(1.08);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 0 #15803d, 0 16px 28px rgba(22, 163, 74, 0.5);
+}
+
+.btn-proceed-mission:active {
+  transform: translateY(4px);
+  box-shadow: 0 2px 0 #15803d;
+}
+
+/* ==========================================================================
+   RANDOM WORD CUTSCENE (SLOT MACHINE REEL)
+   ========================================================================== */
+.game-cutscene-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 6, 32, 0.88);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.cutscene-modal-card {
+  width: 100%;
+  max-width: 520px;
+  background: #1e1138;
+  border: 3px solid #8b5cf6;
+  border-radius: 28px;
+  padding: 32px 24px;
+  box-shadow: 0 0 50px rgba(139, 92, 246, 0.45), 0 20px 40px rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 20px;
+  position: relative;
+  overflow: hidden;
+  animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.cutscene-top-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(139, 92, 246, 0.25);
+  border: 1px solid rgba(139, 92, 246, 0.5);
+  color: #c4b5fd;
+  padding: 5px 14px;
+  border-radius: 9999px;
+  font-family: var(--font-game);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.cutscene-title {
+  margin: 0;
+  font-family: var(--font-game);
+  font-size: 24px;
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: 0.5px;
+}
+
+.cutscene-sub {
+  margin: 0;
+  font-size: 13px;
+  color: #a78bfa;
+}
+
+/* Slot Reel Machine Frame */
+.cutscene-reel-frame {
+  width: 100%;
+  background: #0f0724;
+  border: 2px solid #6d28d9;
+  border-radius: 20px;
+  padding: 20px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.7);
+}
+
+.reel-indicator-left,
+.reel-indicator-right {
+  font-size: 20px;
+  color: #f59e0b;
+  animation: pulseIndicator 0.8s infinite alternate ease-in-out;
+  user-select: none;
+}
+
+@keyframes pulseIndicator {
+  0% { transform: scale(0.9); opacity: 0.6; }
+  100% { transform: scale(1.2); opacity: 1; }
+}
+
+.reel-slot-center {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60px;
+  padding: 0 10px;
+}
+
+.reel-spinning-word {
+  font-family: var(--font-game);
+  font-size: 32px;
+  font-weight: 900;
+  color: #ffe066;
+  text-shadow: 0 0 16px rgba(255, 224, 102, 0.7), 0 4px 0 #b45309;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  transition: all 0.08s ease;
+}
+
+.reel-spinning-word.blur-effect {
+  filter: blur(1.5px);
+  transform: translateY(-2px) scale(1.05);
+  opacity: 0.9;
+}
+
+.reel-spinning-word.locked-effect {
+  color: #34d399;
+  text-shadow: 0 0 20px rgba(52, 211, 153, 0.8), 0 4px 0 #065f46;
+  transform: scale(1.12);
+  animation: lockSlam 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes lockSlam {
+  0% {
+    transform: scale(2.2);
+    opacity: 0.2;
+    filter: brightness(2);
+  }
+  60% {
+    transform: scale(0.95);
+  }
+  100% {
+    transform: scale(1.12);
+    opacity: 1;
+    filter: brightness(1);
+  }
+}
+
+/* Revealed Mission Dossier Card in Cutscene */
+.cutscene-revealed-dossier {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.dossier-pill-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.dossier-pill {
+  font-family: var(--font-game);
+  font-size: 12px;
+  font-weight: 800;
+  padding: 4px 12px;
+  border-radius: 9999px;
+}
+
+.dossier-pill.letter-pill {
+  background: #f59e0b;
+  color: #ffffff;
+}
+
+.dossier-pill.cat-pill {
+  background: #3b82f6;
+  color: #ffffff;
+}
+
+.dossier-hint-text {
+  margin: 0;
+  font-size: 12px;
+  color: #e2e8f0;
+  font-style: italic;
+  line-height: 1.4;
+}
+
+.btn-enter-game-fast {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px;
+  border: none;
+  border-radius: 9999px;
+  background: linear-gradient(180deg, #38bdf8 0%, #0284c7 100%);
+  color: #ffffff;
+  font-family: var(--font-game);
+  font-size: 16px;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 6px 0 #0369a1, 0 10px 20px rgba(2, 132, 199, 0.4);
+  transition: all 0.15s ease;
+}
+
+.btn-enter-game-fast:hover {
+  filter: brightness(1.1);
+  transform: translateY(-2px);
+}
+
+.btn-enter-game-fast:active {
+  transform: translateY(4px);
+  box-shadow: 0 2px 0 #0369a1;
+}
+
+@media (max-width: 640px) {
+  .start-roles-grid {
+    grid-template-columns: 1fr;
+  }
+  .start-main-headline {
+    font-size: 22px;
+  }
+  .reel-spinning-word {
+    font-size: 24px;
   }
 }
