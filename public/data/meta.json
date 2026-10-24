@@ -1,0 +1,9 @@
+{
+  "n_words": 50000,
+  "dim": 300,
+  "dtype": "float16",
+  "exact_matches": 16053,
+  "approx_matches": 33947,
+  "sha256_vectors": "6c72c1bb9527915d01c4549de1f762c67c54c4f888ff0eef924ca597c1b6af95",
+  "sha256_vocab": "a810e8fbc1c9b24e6ab42f0644ee2e6c378aafe31d2064e15c52081af98ae7a1"
+}
