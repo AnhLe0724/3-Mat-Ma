@@ -6,11 +6,9 @@ import {
   Award,
   ChevronDown,
   ChevronUp,
-  Coins,
   Dice5,
   Eye,
   EyeOff,
-  Gem,
   HelpCircle,
   Lock,
   Mail,
@@ -21,8 +19,6 @@ import {
   ShieldCheck,
   Sparkles,
   Star,
-  Volume2,
-  VolumeX,
 } from 'lucide-react';
 
 export const GameTab: React.FC = () => {
@@ -45,7 +41,6 @@ export const GameTab: React.FC = () => {
 
   const [showSecret, setShowSecret] = useState(true);
   const [showRules, setShowRules] = useState(false);
-  const [soundEnabled, setSoundEnabled] = useState(true);
   const [customWordInput, setCustomWordInput] = useState('');
   const [showCustomModal, setShowCustomModal] = useState(false);
 
@@ -73,47 +68,6 @@ export const GameTab: React.FC = () => {
       <div className="game-bg-cross cross-2">✕ ✕ ✕</div>
       <div className="game-bg-circle circle-1" />
       <div className="game-bg-circle circle-2" />
-
-      {/* Top Mobile Game HUD Bar */}
-      <div className="game-hud-bar">
-        {/* Left Action Buttons */}
-        <div className="hud-actions-left">
-          <button
-            type="button"
-            className="hud-icon-btn"
-            onClick={() => setSoundEnabled(!soundEnabled)}
-            title={soundEnabled ? 'Tắt âm thanh' : 'Bật âm thanh'}
-          >
-            {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
-          </button>
-          <button
-            type="button"
-            className={`hud-icon-btn ${showRules ? 'active' : ''}`}
-            onClick={() => setShowRules(!showRules)}
-            title="Luật chơi & Hướng dẫn"
-          >
-            <HelpCircle size={16} />
-          </button>
-        </div>
-
-        {/* Center Level Pill Badge */}
-        <div className="hud-level-pill">
-          <span className="level-pill-badge">LEVEL {gameMission.id.replace('preset_', '').padStart(2, '0')}</span>
-          <span className="level-pill-title">{gameMission.category}</span>
-        </div>
-
-        {/* Right Resource Counters (Coins & Gems) */}
-        <div className="hud-resources-right">
-          <div className="resource-pill coins-pill">
-            <Coins size={14} className="coin-icon" />
-            <span className="resource-value">1,250</span>
-          </div>
-          <div className="resource-pill gems-pill">
-            <Gem size={14} className="gem-icon" />
-            <span className="resource-value">250</span>
-          </div>
-        </div>
-      </div>
 
       {/* Big Chunky 3D Title Section */}
       <div className="game-hero-header">
